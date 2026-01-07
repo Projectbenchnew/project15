@@ -1,6 +1,7 @@
 provider "aws" {
   region = "us-east-1"
 }
+
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
@@ -11,13 +12,13 @@ module "eks" {
   vpc_id     = data.aws_vpc.default.id
   subnet_ids = data.aws_subnets.eks.ids
 
-  # 🚨 FORCE PUBLIC API
+  # 🔥🔥🔥 RBAC FIX (CORRECT)
+  enable_cluster_creator_admin_permissions = true
+
+  # 🌍 PUBLIC API
   cluster_endpoint_public_access  = true
   cluster_endpoint_private_access = false
   cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
-
-  # 🔥 DISABLE ENCRYPTION (avoid KMS delays)
-  cluster_encryption_config = {}
 
   create_cloudwatch_log_group = false
 
