@@ -2,19 +2,6 @@ provider "aws" {
   region = var.aws_region
 }
 
-# Fetch default VPC
-data "aws_vpc" "default" {
-  default = true
-}
-
-# Fetch all subnets in default VPC
-data "aws_subnets" "default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-}
-
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
@@ -25,7 +12,7 @@ module "eks" {
   vpc_id     = data.aws_vpc.default.id
   subnet_ids = data.aws_subnets.default.ids
 
-  # 🔴 IMPORTANT FIXES (avoid conflicts)
+  # 🔥 Prevent re-creation conflicts
   create_kms_key              = false
   cluster_encryption_config   = {}
   create_cloudwatch_log_group = false
