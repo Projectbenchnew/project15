@@ -10,7 +10,7 @@ module "eks" {
   cluster_version = "1.29"
 
   vpc_id     = data.aws_vpc.default.id
-  subnet_ids = data.aws_subnets.default.ids
+  subnet_ids = data.aws_subnets.eks.ids
 
   create_kms_key              = false
   cluster_encryption_config   = {}
