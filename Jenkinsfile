@@ -17,14 +17,11 @@ pipeline {
         stage('Install kubectl') {
             steps {
                 sh '''
-                export PATH=$HOME/bin:$PATH
-
                 if ! command -v kubectl >/dev/null 2>&1; then
                   echo "Installing kubectl..."
-                  mkdir -p $HOME/bin
-                  curl -sLO https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+                  curl -LO https://dl.k8s.io/release/v1.29.3/bin/linux/amd64/kubectl
                   chmod +x kubectl
-                  mv kubectl $HOME/bin/
+                  sudo mv kubectl /usr/local/bin/kubectl
                 fi
 
                 kubectl version --client
@@ -35,12 +32,15 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 dir('terraform') {
-                    sh 'terraform init'
+                    sh '''
+                    rm -f terraform.tfstate.lock.info
+                    terraform init
+                    '''
                 }
             }
         }
 
-        stage('Terraform Apply') {
+        stage('Terraform Apply (Create EKS)') {
             steps {
                 dir('terraform') {
                     sh 'terraform apply -auto-approve'
@@ -51,30 +51,34 @@ pipeline {
         stage('Configure kubeconfig') {
             steps {
                 sh '''
-                export PATH=$HOME/bin:$PATH
-
                 aws eks update-kubeconfig \
-                  --region $AWS_REGION \
-                  --name $CLUSTER_NAME
+                  --region ${AWS_REGION} \
+                  --name ${CLUSTER_NAME}
+
+                kubectl config current-context
                 '''
             }
         }
 
-        stage('Wait for EKS API') {
+        stage('Wait for Nodes Ready') {
             steps {
-                echo "Waiting for EKS control plane to be ready..."
-                sh 'sleep 120'
+                sh '''
+                echo "Waiting for worker nodes..."
+                for i in {1..12}; do
+                  kubectl get nodes && break
+                  echo "Retry $i..."
+                  sleep 30
+                done
+                '''
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy Application') {
             steps {
                 sh '''
-                export PATH=$HOME/bin:$PATH
-
-                kubectl get nodes
                 kubectl apply -f k8s/deployment.yaml
                 kubectl apply -f k8s/service.yaml
+                kubectl get svc
                 '''
             }
         }
