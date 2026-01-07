@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = "us-east-1"
+        AWS_REGION   = "us-east-1"
         CLUSTER_NAME = "prod-eks-cluster"
+        PATH = "$HOME/bin:$PATH"
     }
 
     stages {
@@ -18,10 +19,13 @@ pipeline {
             steps {
                 sh '''
                 if ! command -v kubectl >/dev/null 2>&1; then
-                  curl -LO https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+                  echo "Installing kubectl..."
+                  mkdir -p $HOME/bin
+                  curl -LO https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
                   chmod +x kubectl
-                  sudo mv kubectl /usr/local/bin/
+                  mv kubectl $HOME/bin/
                 fi
+
                 kubectl version --client
                 '''
             }
