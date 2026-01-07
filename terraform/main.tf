@@ -6,10 +6,22 @@ data "aws_vpc" "default" {
   default = true
 }
 
-data "aws_subnets" "default" {
+# ✅ Get only supported AZs for EKS control plane
+data "aws_subnets" "eks" {
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.default.id]
+  }
+
+  filter {
+    name   = "availability-zone"
+    values = [
+      "us-east-1a",
+      "us-east-1b",
+      "us-east-1c",
+      "us-east-1d",
+      "us-east-1f"
+    ]
   }
 }
 
@@ -20,13 +32,13 @@ module "eks" {
   cluster_name    = var.cluster_name
   cluster_version = "1.29"
 
-  # 🔴 CRITICAL FIXES (DO NOT REMOVE)
+  # 🔴 Required for Jenkins reruns
   create_kms_key              = false
   cluster_encryption_config   = {}
   create_cloudwatch_log_group = false
 
   vpc_id     = data.aws_vpc.default.id
-  subnet_ids = data.aws_subnets.default.ids
+  subnet_ids = data.aws_subnets.eks.ids
 
   eks_managed_node_groups = {
     prod_nodes = {
