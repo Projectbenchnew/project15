@@ -12,8 +12,7 @@ module "eks" {
   vpc_id     = data.aws_vpc.default.id
   subnet_ids = data.aws_subnets.eks.ids
 
-  cluster_endpoint_public_access  = true
-  cluster_endpoint_private_access = false
+  cluster_endpoint_public_access = true
 
   eks_managed_node_groups = {
     prod_nodes = {
