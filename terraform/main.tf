@@ -12,7 +12,6 @@ module "eks" {
   vpc_id     = data.aws_vpc.default.id
   subnet_ids = data.aws_subnets.default.ids
 
-  # 🔥 Prevent re-creation conflicts
   create_kms_key              = false
   cluster_encryption_config   = {}
   create_cloudwatch_log_group = false
