@@ -22,6 +22,10 @@ module "eks" {
   cluster_name    = var.cluster_name
   cluster_version = "1.29"
 
+  # 🔴 IMPORTANT FIXES (to avoid errors you saw)
+  enable_kms_encryption       = false
+  create_cloudwatch_log_group = false
+
   vpc_id     = data.aws_vpc.default.id
   subnet_ids = data.aws_subnets.default.ids
 
