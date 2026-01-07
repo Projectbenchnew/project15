@@ -1,7 +1,3 @@
-provider "aws" {
-  region = var.aws_region
-}
-
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
@@ -12,7 +8,10 @@ module "eks" {
   vpc_id     = data.aws_vpc.default.id
   subnet_ids = data.aws_subnets.eks.ids
 
-  cluster_endpoint_public_access = true
+  # ✅ FIX: prevent CloudWatch conflict
+  create_cloudwatch_log_group = false
+
+  # ❌ DO NOT define cluster_encryption_config at all
 
   eks_managed_node_groups = {
     prod_nodes = {
